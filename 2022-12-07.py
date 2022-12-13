@@ -1,6 +1,7 @@
 fe = open('2022-12-07-example.txt','r')
+f = open('2022-12-07.txt', 'r')
 
-lines = fe.readlines()
+lines = f.readlines()
 
 lines = [line.rstrip('\n') for line in lines]
 
@@ -31,13 +32,13 @@ class Node:
         return None
 
     def sum_total_vals(self):
-        if self.sum_of_values == 0:
+        if self.sum_of_total_values == 0:
             current_sum = sum(self.child_values)
             for ch_node in self.child_nodes:
-                current_sum += ch_node.sum_vals()
-            self.sum_of_values = current_sum
+                current_sum += self.child_nodes[ch_node].sum_total_vals()
+            self.sum_of_total_values = current_sum
 
-        return self.sum_of_values
+        return self.sum_of_total_values
 
     
 
@@ -45,20 +46,38 @@ class Node:
 size_p1_limit = 0
 current_node = Node('/')
 limit = 100000
+dirs_calculated = set([])
+dir_sizes = {}
 
 for line in lines:
     if line.startswith('$ cd'):
         cwd = line.split(' ')[-1]
         if cwd == '..':
             # go one up
-            curr_val_sum = current_node.sum_total_values()
+            curr_val_sum = current_node.sum_total_vals()
+            dir_sizes[current_node.name] = curr_val_sum
             if curr_val_sum <= limit:
                 size_p1_limit += curr_val_sum
+                dirs_calculated.add(current_node.name)
             current_node = current_node.parent
         else:
-            current_node = current_node.add_child_node(cwd, current_node)
-    elif isdigit(line[0]):
+            current_node = current_node.add_child_node(cwd)
+    elif line[0].isdigit():
         current_node.add_child_value(int(line.split(' ')[0]))
 
 
 # TODO: go through the tree upstream and recalculate the folders
+while current_node.parent is not None:
+    curr_val_sum = current_node.sum_total_vals()
+    dir_sizes[current_node.name] = curr_val_sum
+    if curr_val_sum <= limit and current_node.name not in dirs_calculated:
+        size_p1_limit += curr_val_sum
+        dirs_calculated.add(current_node.name)
+    current_node = current_node.parent
+
+print(size_p1_limit)
+
+# part 2
+space_needed = 30000000 - (70000000 - max(dir_sizes.values()))
+
+print(min(val for val in dir_sizes.values() if val >= space_needed))
