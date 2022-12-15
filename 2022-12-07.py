@@ -4,6 +4,8 @@ f = open('2022-12-07.txt', 'r')
 lines = f.readlines()
 
 lines = [line.rstrip('\n') for line in lines]
+print(len(lines))
+print(len([line for line in lines if line.startswith('dir ')]))
 
 # TODO: implement a tree class that has the following functions:
 # - get current branch/node
@@ -39,7 +41,17 @@ class Node:
             self.sum_of_total_values = current_sum
 
         return self.sum_of_total_values
-
+    
+    def get_child_total_vals(self, dir_list):
+        if self.sum_of_total_values == 0:
+            current_sum = sum(self.child_values)
+            for ch_node in self.child_nodes:
+                current_sum += self.child_nodes[ch_node].sum_total_vals()
+            self.sum_of_total_values = current_sum
+        for ch_node in self.child_nodes:
+            dir_list.extend(self.child_nodes[ch_node].get_child_total_vals([]))
+        dir_list.append(self.sum_of_total_values)
+        return dir_list
     
 
 
@@ -75,9 +87,11 @@ while current_node.parent is not None:
         dirs_calculated.add(current_node.name)
     current_node = current_node.parent
 
-print(size_p1_limit)
+dict_sizes = current_node.get_child_total_vals([])
 
+print(size_p1_limit)
+print(len(dir_sizes))
 # part 2
 space_needed = 30000000 - (70000000 - max(dir_sizes.values()))
 
-print(min(val for val in dir_sizes.values() if val >= space_needed))
+print(min(val for val in dict_sizes if val >= space_needed))
